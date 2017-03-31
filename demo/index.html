@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>iRED</title>
+    <link rel="stylesheet" href="main.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://cdn.vaadin.com/vaadin-core-elements/latest/webcomponentsjs/webcomponents-lite.min.js"></script>
+    <link rel="import" href="https://cdn.vaadin.com/vaadin-core-elements/master/vaadin-combo-box/vaadin-combo-box-light.html">
+  </head>
+  <body>
+    <redoc spec-url='swagger.yaml' lazy-rendering hide-hostname></redoc>
+    <!-- <redoc scroll-y-offset="body > nav" spec-url='swagger.yaml' lazy-rendering></redoc> -->
+
+    <script>
+      window.__REDOC_DEV__ = true;
+    </script>
+    <script src="main.js"> </script>
+    <script src="/webpack-dev-server.js"></script>
+    <script src="/polyfills.js"></script>
+    <script src="/vendor.js"></script>
+    <script src="/redoc.js"></script>
+  </body>
+</html>

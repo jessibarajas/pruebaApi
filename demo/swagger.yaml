@@ -1,0 +1,610 @@
+swagger: '2.0'
+schemes:
+  - https
+host: test.ired.mx
+basePath: /api/soap/v2/soap.php
+info:
+  description: |
+    Este es un ejemplo de una api de iRED.
+    Puedes encontrar mas información acerca de iRED en
+    [https://ired.mx](https://ired.mx).
+    # Introducción
+    iRED Dispone de una API (interfaz de programación de aplicaciones,(del inglés: Application Programming Interface), que permite mediante una interfaz simple,
+    potente y segura, desarrollar aplicaciones para la obtención de los datos de operación de su compañía.
+    Este documento está dirigido a personas con conocimiento básico para el desarrollo de software, servicios web (WebServices) y la interfaz de usuario de iRED.
+    
+    La API de iRED está basada en el protocolo **SOAP** (del inglés Simple Object Access Protocol). 
+    El protocolo SOAP es un protocolo estándar que define como dos objetos en diferentes entornos pueden comunicarse entre si, mediante intercambio de mensajes en formato XML.
+    # OpenAPI Specification
+    
+    # Cross-Origin Resource Sharing
+    
+    # Autenticación
+    Para poder establecer una conexión a la API de iRED, será necesario contar con una cuenta de iRED previamente registrada así como conocer el password asignado a esta cuenta.
+    <!-- ReDoc-Inject: <security-definitions> -->
+  version: 1.0.0
+  title: iRED
+  termsOfService: 'https://ired.mx/terms/'
+  contact:
+    email: soporte@ired.mx
+  x-logo:
+    url: 'iRED.png'
+  license:
+    name: Apache 2.0
+    url: 'http://www.apache.org/licenses/LICENSE-2.0.html'
+tags:
+  - name: login
+    description: Operations about user
+  - name: logout
+    description: Operations about user
+  - name: clientes
+    description: Operations about user
+  - name: obtener elementos
+    description: Operations about user
+x-tagGroups:
+  - name: General
+    tags:
+      - login
+      - logout
+      - obtener elementos
+  - name: User Management
+    tags:
+      - clientes
+securityDefinitions:
+  login:
+    description: |
+      Se identifica ante la aplicación iRED para obtener un código de sesión que será necesario en posteriores llamadas.
+      ```
+      login(user_auth, application)
+      ```
+      Es importante cerrar la sesión al finalizar de utilizarla, ya que se restringe a 3 sesiones simultaneas por usuario,
+      si no cierra sus sesiones, el sistema restringirá nuevas sesiones hasta que la sesión sea terminada automáticamente por inactividad.
+      ```
+      logout(session)
+      ```
+    type: oauth2
+    authorizationUrl: "https://app.ired.mx/api/soap/v2/soap.php/login"
+    flow: implicit
+    scopes:
+x-servers:
+  - url: app.ired.mx/api/soap/v2/soap.php
+    description: Servidor iRED
+paths:
+  /login:
+    post:
+      tags:
+        - login
+      summary: Iniciar sesión
+      consumes:
+        - application/xml
+      produces:
+        - application/xml
+      parameters:
+        - in: body
+          name: body
+          description: Pet object that needs to be added to the store
+          required: true
+          schema:
+            $ref: '#/definitions/User_auth'
+      responses:
+        '405':
+          description: Invalid input
+      security:
+        - petstore_auth:
+            - 'write:pets'
+            - 'read:pets'
+      x-code-samples:
+        - lang: PHP
+          source: ""
+  /getElements:
+    get:
+      tags:
+        - obtener elementos
+      summary: getElements
+      description: Obtiene objetos de información de un módulo, dando la posibilidad de especificar un filtro
+      consumes:
+        - application/xml
+      produces:
+        - application/xml
+      parameters:
+        - in: body
+          name: body
+          description: "Sintaxis: getElements(session, module, filters)"
+          schema:
+            $ref: '#/definitions/Get'
+          x-examples:
+            application/json:
+              session: fqs5726ta3tcpda1q8oqm4kh76
+              module: servicios
+              filters:
+                folio: 6014
+                folioDesde: 
+                fechaInicio: 
+                fechaFin: 
+      responses:
+        '200':
+          description: " - Consulta exitosa de servicios"
+          schema:
+                $ref: '#/definitions/Servicio'
+        '290':
+          description: " - Consulta exitosa de creditos"
+          schema:
+            $ref: '#/definitions/Credito'
+        '400':
+          description: Folio incorrecto
+        '404':
+          description: Servicio no encontrado
+      security:
+        - api_key: []
+      x-code-samples:
+        - lang: JSON (creditos)
+          source: |
+            {
+              "session": "fqs5726ta3tcpda1q8oqm4kh76",
+              "module": "creditos",
+              "filters": {
+                "codigoEstacion": "ES12345",
+                "rfcCliente": null,
+              }
+            }
+        - lang: XML (servicios)
+          source: |
+            <?xml version="1.0" encoding="UTF-8"?>
+            <SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns1="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
+            <SOAP-ENV:Body>
+                <ns1:getElements>
+                    <param0 xsi:type="xsd:string">fqs5726ta3tcpda1q8oqm4kh76</param0>
+                    <param1 xsi:type="xsd:string">servicios</param1>
+                    <param2 xsi:type="xsd:string">{"folio":"5472", "folioDesde":"", "fechaInicio":"", "fechaFin":""}</param2>
+                </ns1:getElements>
+            </SOAP-ENV:Body>
+            </SOAP-ENV:Envelope>
+        - lang: XML (creditos)
+          source: |
+            <?xml version="1.0" encoding="UTF-8"?>
+            <SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns1="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
+            <SOAP-ENV:Body>
+                <ns1:getElements>
+                    <param0 xsi:type="xsd:string">fqs5726ta3tcpda1q8oqm4kh76</param0>
+                    <param1 xsi:type="xsd:string">creditos</param1>
+                    <param2 xsi:type="xsd:string">{"codigoEstacion":"ES12345", "rfcCliente":""}</param2>
+                </ns1:getElements>
+            </SOAP-ENV:Body>
+            </SOAP-ENV:Envelope>
+  /user/login:
+    get:
+      tags:
+        - clientes
+      summary: Logs user into the system
+      description: ''
+      operationId: loginUser
+      produces:
+        - application/xml
+        - application/json
+      parameters:
+        - name: username
+          in: query
+          description: The user name for login
+          required: true
+          type: string
+        - name: password
+          in: query
+          description: The password for login in clear text
+          required: true
+          type: string
+      responses:
+        '200':
+          description: successful operation
+          schema:
+            type: string
+          examples:
+            application/json: OK
+          headers:
+            X-Rate-Limit:
+              type: integer
+              format: int32
+              description: calls per hour allowed by the user
+            X-Expires-After:
+              type: string
+              format: date-time
+              description: date in UTC when toekn expires
+        '400':
+          description: Invalid username/password supplied
+  /user/logout:
+    get:
+      tags:
+        - clientes
+      summary: Logs out current logged in user session
+      description: ''
+      operationId: logoutUser
+      produces:
+        - application/xml
+        - application/json
+      parameters: []
+      responses:
+        default:
+          description: successful operation
+definitions:
+  ApiResponse:
+    type: object
+    properties:
+      code:
+        type: integer
+        format: int32
+      type:
+        type: string
+      message:
+        type: string
+  Id:
+    type: integer
+    format: int64
+  Servicio:
+    type: object
+    required:
+      - folio
+    properties:
+      folio:
+        description: Folio del servicio
+        type: int32
+        example: 1589
+      cliente:
+        description: Datos del cliente
+        allOf:
+          - $ref: '#/definitions/Cliente'
+      fechaSurtido:
+        description: Fecha en la que se realizó el servicio
+        type: date-time
+        example: '2017-03-23 15:09:02'
+      conductor:
+        description: Datos del cliente
+        allOf:
+          - $ref: '#/definitions/Conductor'
+      cantidad:
+        description: Cantidad recibida en el servicio
+        type: float
+        example: 26.3200
+      producto:
+        description: Nombre del producto surtido
+        type: string
+        example: Pemex Magna
+      subtotal:
+        description: Subtotal del servicio
+        type: float
+        example: 363.7500
+      tasaImpuesto:
+        description: Tasa del impuesto del servicio
+        type: float
+        example: 16.0000
+      importeImpuesto:
+        description: Importe del impuesto del servicio
+        type: float
+        example: 58.2000
+      total:
+        description: Total del servicio
+        type: float
+        example: 431.6000
+      codigoEstacion:
+        description: Código de la estación donde se realizó el servicio
+        type: string
+        example: ES01594
+      autorizacion:
+        description: Autorización asignada al conductor
+        type: int32
+        example: 180
+      tipoPago:
+        description: Tipo de pago del servicio
+        type: int32
+        example: 2
+      valeUsado:
+        description: Vale usado en el servicio
+        type: int32
+    xml:
+      name: Servicio
+  User:
+    type: object
+    properties:
+      id:
+        description: User ID
+        $ref: '#/definitions/Id'
+      username:
+        description: User supplied username
+        type: string
+        minLength: 4
+        example: John78
+      firstName:
+        description: User first name
+        type: string
+        minLength: 1
+        example: John
+      lastName:
+        description: User last name
+        type: string
+        minLength: 1
+        example: Smith
+      email:
+        description: User email address
+        type: string
+        format: email
+        example: john.smith@example.com
+      password:
+        type: string
+        description: 'User password, MUST contain a mix of upper and lower case letters, as well as digits'
+        format: password
+        minLength: 8
+        pattern: '(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])'
+        example: drowssaP123
+      phone:
+        description: User phone number in international format
+        type: string
+        pattern: "^\\+(?:[0-9]-?){6,14}[0-9]$"
+        example: +1-202-555-0192
+        x-nullable: true
+      userStatus:
+        description: User status
+        type: integer
+        format: int32
+    xml:
+      name: User
+  Cliente:
+    type: object
+    properties:
+      nombre:
+        description: Nombre del cliente
+        type: string
+        example: Pegasus Control S.A. de C.V.
+      rfc:
+        description: RFC del cliente
+        type: string
+        minLength: 
+        example: PCO960701A49
+    xml:
+      name: Cliente
+  Conductor:
+    type: object
+    properties:
+      nombre:
+        description: Nombre del conductor
+        type: string
+        example: Juan García
+      tarjeta:
+        description: Tarjeta asignada al conductor
+        type: int32
+        example: 1111222233334444
+      usuario:
+        description: Usuario del conductor
+        type: string
+        example: jgarcia
+      vehiculo:
+        description: Categories this pet belongs to
+        allOf:
+          - $ref: '#/definitions/Vehiculo'
+    xml:
+      name: Conductor
+  Vehiculo:
+    type: object
+    properties:
+      noEconomico:
+        description: Número del vehículo
+        type: int32
+        example: 82
+      placas:
+        description: Placas del vehículo
+        type: string
+        example: JMM1289
+      grupo:
+        description: Grupo al que pertenece el vehículo
+        type: string
+        example: 
+      odometro:
+        description: Kilometraje recorrido del vehículo
+        type: int32
+        example: 72362
+    xml:
+      name: Vehiculo
+  Credito:
+    type: object
+    properties:
+      activo:
+        description: Indica si el crédito se encuentra activo
+        type: boolean
+      limiteCredito:
+        description: Límite del credito
+        type: int32
+      saldo:
+        description: Saldo actual del credito
+        type: float
+      estaciones:
+        type: object
+        properties:
+          nombre:
+            description: Nombre de la estación
+          codigoEstacion:
+            description: Código de la estación
+    xml:
+      name: Credito
+  PagoCredito:
+    type: object
+    properties:
+      activo:
+        description: Indica si el crédito se encuentra activo
+        type: boolean
+      limiteCredito:
+        description: Límite del credito
+        type: int32
+      saldo:
+        description: Saldo actual del credito
+        type: float
+      estaciones:
+        type: object
+        properties:
+          nombre:
+            description: Nombre de la estación
+          codigoEstacion:
+            description: Código de la estación
+    xml:
+      name: PagoCredito
+  User_auth:
+    type: object
+    properties:
+      user_name:
+        description: Nombre de usuario
+        type: string
+        example: rperez
+      password:
+        description: Contraseña cifrada en MD5
+        type: string
+        example: 730b6f15eeb259144b52e56909905e40
+    xml:
+      name: User_auth
+  Get:
+    type: object
+    required:
+      - session
+      - module
+      - filters
+    discriminator: module
+    properties:
+      session:
+        description: ID de la sesión
+        type: string
+        example: fqs5726ta3tcpda1q8oqm4kh76 
+      module:
+        description: Identificador del modulo
+        type: string
+      filters:
+        description: String en formato JSON, en un arreglo llave => valor
+        type: string
+    xml:
+      name: Get
+    x-examples:
+      application/json:
+        asdasd: asd
+  ServiceFilters:
+    type: object
+    description: Es requerido enviar mínimo un filtro
+    properties:
+      folio:
+        description: Obtener un servicio por su número de folio
+        type: int32
+      folioDesde:
+        description: Obtener N servicios desde un folio dado
+        type: int32
+      fechaInicio:
+        description: Obtener N servicios en un rango de fechas
+        type: dateTime
+      fechaFin:
+        description: Obtener N servicios en un rango de fechas
+        type: dateTime
+    xml:
+      name: ServiceFilters
+  CreditosFilters:
+    type: object
+    properties:
+      codigoEstacion:
+        description: Obtener un servicio por su número de folio
+        type: int32
+      rfcCliente:
+        description: Obtener N servicios desde un folio dado
+        type: int32
+    xml:
+      name: CreditosFilters
+  PagosCreditosFilters:
+    type: object
+    properties:
+      fechaInicio:
+        description: Fecha de inicio del rango
+        type: date-time
+      fechaFin:
+        description: Fecha de fin del rango
+        type: date-time
+      montoPagado:
+        description: Cantidad pagada
+        type: float
+    xml:
+      name: PagosCreditosFilters
+  servicios:
+    description: Los servicios son las ventas/compras que se realizan a través de iRED
+    allOf:
+      - $ref: '#/definitions/Get'
+      - type: object
+        properties:
+          filters:
+            type: object
+            allOf:
+              - $ref: '#/definitions/ServiceFilters'
+  creditos:
+    description: Los créditos son las definiciones de los montos que una estación pone disponible a una flotilla para comprar, permitiendo pagar posteriormente
+    allOf:
+      - $ref: '#/definitions/Get'
+      - type: object
+        properties:
+          filters:
+            type: object
+            allOf:
+              - $ref: '#/definitions/CreditosFilters'
+  pagosCreditos:
+    description: Los pagos de un crédito son los montos que una flotilla paga a la estación para reducir su saldo consumido
+    allOf:
+      - $ref: '#/definitions/Get'
+      - type: object
+        properties:
+          filters:
+            type: object
+            allOf:
+              - $ref: '#/definitions/PagosCreditosFilters'
+  getElementsResp:
+    x-extendedDiscriminator: module
+    type: object
+    required:
+      - module
+    properties:
+      module:
+        $ref: '#/definitions/ModuleType'
+    x-examples:
+
+  serviciosResp:
+    allOf:
+      - $ref: "#/definitions/getElementsResp"
+      - properties:
+          module:
+            type: string
+            enum:
+              - servicios
+          respuesta:
+            type: object
+            title: Respuesta de servicios
+            allOf:
+              - $ref: '#/definitions/Servicio'
+  creditosResp:
+    allOf:
+      - $ref: "#/definitions/getElementsResp"
+      - properties:
+          module:
+            type: string
+            enum:
+              - creditos
+          respuesta:
+            type: object
+            title: Respuesta de créditos
+            allOf:
+              - $ref: '#/definitions/Credito'
+  pagosCreditosResp:
+    allOf:
+      - $ref: "#/definitions/getElementsResp"
+      - properties:
+          module:
+            type: string
+            enum:
+              - pagosCreditos
+          respuesta:
+            type: object
+            title: Respuesta de pagos de créditos
+            allOf:
+              - $ref: '#/definitions/PagoCredito'
+  ModuleType:
+    type: string
+    format: enum
+    enum:
+      - servicios
+      - creditos
+      - pagosCreditos

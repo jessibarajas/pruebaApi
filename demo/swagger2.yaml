@@ -1,0 +1,80 @@
+swagger: "2.0"
+info:
+   version: 1.0.0
+   title: Applications API
+   description: A simple set of APIs
+schemes:
+   - http
+consumes:
+   - application/json
+produces:
+   - application/json
+paths:
+   "/app/{app_id}":
+     get:
+       tags:
+         - app
+         - apps
+       description: Returns application settings
+       operationId: getApplicationDefaults
+       produces:
+         - application/json
+         - application/xml
+       parameters:
+         - name: app_id
+           in: path
+           description: Unique Application ID
+           required: true
+           type: string
+           disciminator: app_id
+       responses:
+         "200":
+           description: "Response OK\tEverything worked as expected."
+           schema:
+             $ref: "#/definitions/AppSummary"
+         default:
+           description: unexpected error
+           schema:
+             $ref: "#/definitions/errorModel"
+definitions:
+   AppSummary:
+      type: object
+      disciminator: app_id
+      properties:
+       app_id:
+         type: string
+       app_name:
+         type: string
+       brand:
+         type: string
+       app_settings:
+         $ref: "#/definitions/AppSettings"
+   AppSettings:
+      type: object
+      properties:
+       domain:
+         type: string
+       facebook_page:
+         type: string
+       session_timeout:
+         type: integer
+         format: int32
+       allowed_countries:
+         type: array
+         items:
+           type: string
+       compatible_ios_versions:
+         type: array
+         items:
+           type: string
+   errorModel:
+      type: object
+      required:
+       - code
+       - message
+      properties:
+       code:
+         type: integer
+         format: int32
+       message:
+         type: string

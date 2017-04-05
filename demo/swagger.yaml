@@ -9,19 +9,39 @@ info:
     Puedes encontrar mas información acerca de iRED en
     [https://ired.mx](https://ired.mx).
     # Introducción
-    iRED Dispone de una API (interfaz de programación de aplicaciones,(del inglés: Application Programming Interface), que permite mediante una interfaz simple,
+    iRED Dispone de una API (interfaz de programación de aplicaciones, (del inglés: Application Programming Interface), que permite mediante una interfaz simple,
     potente y segura, desarrollar aplicaciones para la obtención de los datos de operación de su compañía.
     Este documento está dirigido a personas con conocimiento básico para el desarrollo de software, servicios web (WebServices) y la interfaz de usuario de iRED.
     
     La API de iRED está basada en el protocolo **SOAP** (del inglés Simple Object Access Protocol). 
     El protocolo SOAP es un protocolo estándar que define como dos objetos en diferentes entornos pueden comunicarse entre si, mediante intercambio de mensajes en formato XML.
-    # OpenAPI Specification
-    
-    # Cross-Origin Resource Sharing
-    
     # Autenticación
-    Para poder establecer una conexión a la API de iRED, será necesario contar con una cuenta de iRED previamente registrada así como conocer el password asignado a esta cuenta.
     <!-- ReDoc-Inject: <security-definitions> -->
+
+    # Errores
+    Cuando una llamada a una función de la API de iRED no se completó de una manera satisfactoria, 
+    se retornará un error con un código y una descripción de la excepción, estos errores serán retornados 
+    en un objeto de tipo `SoapFault`. Un objeto SOAP Fault contiene un error y su estado de un mensaje SOAP.
+
+    Algunos ejemplos de estos errores son los siguientes:
+
+    Código de error  | Error | Descripción | Llamada
+    ----------------|-------------|--------- | --------- 
+    `10` | invalid_login | Login attempt failed please check the username and password' | `login`
+    `102` | module_not_found | No se encontró el modulo | `getElements`
+    `103` | no_file | No existe el archivo | `getElements`
+    `104` | no_class | No se encontró la clase o el metodo | `getElements`
+    `105` | folio_not_found | No se encontró el folio | `getElements`
+    `106` | date_not_found | No se encontraron datos en el rango de fechas ingresado | `getElements`
+    `107` | folioDesde_not_found | No se encontraron datos a partir del folio ingresado | `getElements`
+    `108` | invalid_filters | Filtros no válidos | `getElements`
+    `109` | invalid_date | Fechas no válidas | `getElements`
+    `110` | invalid_range | Rango incorrecto de fechas | `getElements`
+    `111` | invalid_role | Rol no válido | `getElements`
+    `112` | no_numeric | El folio debe de ser un número | `getElements`
+    `1008` | password_expired | Your password has expired. Please provide a new password. | `login`
+    `1009` | lockout_reached | You have been locked out of the Sugar application and cannot log in using existing password. Please contact your Administrator. | `login`
+
   version: 1.0.0
   title: iRED
   termsOfService: 'https://ired.mx/terms/'
@@ -33,48 +53,42 @@ info:
     name: Apache 2.0
     url: 'http://www.apache.org/licenses/LICENSE-2.0.html'
 tags:
-  - name: login
-    description: Operations about user
-  - name: logout
-    description: Operations about user
-  - name: clientes
-    description: Operations about user
+  - name: iniciar sesión
+  - name: cerrar sesión
   - name: obtener elementos
-    description: Operations about user
 x-tagGroups:
   - name: General
     tags:
-      - login
-      - logout
+      - iniciar sesión
+      - cerrar sesión
       - obtener elementos
-  - name: User Management
-    tags:
-      - clientes
 securityDefinitions:
   login:
     description: |
-      Se identifica ante la aplicación iRED para obtener un código de sesión que será necesario en posteriores llamadas.
+      Para poder establecer una conexión a la API de iRED, será necesario contar con una cuenta de iRED previamente registrada así como conocer el password asignado a esta cuenta.
+      
       ```
       login(user_auth, application)
       ```
       Es importante cerrar la sesión al finalizar de utilizarla, ya que se restringe a 3 sesiones simultaneas por usuario,
       si no cierra sus sesiones, el sistema restringirá nuevas sesiones hasta que la sesión sea terminada automáticamente por inactividad.
+      
       ```
       logout(session)
       ```
-    type: oauth2
-    authorizationUrl: "https://app.ired.mx/api/soap/v2/soap.php/login"
-    flow: implicit
-    scopes:
+    type: basic
 x-servers:
   - url: app.ired.mx/api/soap/v2/soap.php
     description: Servidor iRED
+  - url: test.ired.mx/api/soap/v2/soap.php
+    description: Servidor Test iRED
 paths:
   /login:
     post:
       tags:
-        - login
-      summary: Iniciar sesión
+        - iniciar sesión
+      summary: login
+      description: Se identifica ante la aplicación iRED. La llamada devuelve un `ID de sesión`, que se utiliza para las llamadas posteriores para autenticar con el sistema.
       consumes:
         - application/xml
       produces:
@@ -82,26 +96,73 @@ paths:
       parameters:
         - in: body
           name: body
-          description: Pet object that needs to be added to the store
-          required: true
+          description: "\n\n## Sintaxis\nlogin(user_auth, application)"
           schema:
-            $ref: '#/definitions/User_auth'
+            $ref: '#/definitions/LoginSchema'
       responses:
-        '405':
-          description: Invalid input
-      security:
-        - petstore_auth:
-            - 'write:pets'
-            - 'read:pets'
+        '200':
+          description: "Consulta exitosa"
+          schema:
+            $ref: '#/definitions/LoginResp'
+        '500':
+          description: SoapFault
+          schema: 
+            $ref: '#/definitions/SoapFault'
+          examples:
+            application/json: |
+              <SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" 
+                xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+                xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" 
+                SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
+                <SOAP-ENV:Body>
+                  <SOAP-ENV:Fault>
+                    <faultcode xsi:type="xsd:int">10</faultcode>
+                    <faultactor xsi:type="xsd:string"/>
+                    <faultstring xsi:type="xsd:string">Invalid Login</faultstring>
+                    <detail xsi:type="xsd:string">Login attempt failed please check the username and password</detail>
+                  </SOAP-ENV:Fault>
+                </SOAP-ENV:Body>
+              </SOAP-ENV:Envelope>
       x-code-samples:
-        - lang: PHP
-          source: ""
+        - lang: XML
+          source: |
+            <SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns1="" 
+              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" 
+              xmlns:ns2="http://xml.apache.org/xml-soap" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
+              <SOAP-ENV:Body>
+                  <ns1:login>
+                      <param0 xsi:type="ns2:Map">
+                          <item>
+                              <key xsi:type="xsd:string">user_name</key>
+                              <value xsi:type="xsd:string">soporte@ired.mx</value>
+                          </item>
+                          <item>
+                              <key xsi:type="xsd:string">password</key>
+                              <value xsi:type="xsd:string">3015ca4f270b6938b27c95863174a8db</value>
+                          </item>
+                      </param0>
+                  </ns1:login>
+              </SOAP-ENV:Body>
+            </SOAP-ENV:Envelope>
   /getElements:
-    get:
+    post:
       tags:
         - obtener elementos
       summary: getElements
-      description: Obtiene objetos de información de un módulo, dando la posibilidad de especificar un filtro
+      description: |
+        Obtiene objetos de información de un módulo, dando la posibilidad de especificar un filtro.
+        En la respuesta regresa un arreglo de objetos JSON del módulo consultado.
+
+        Por ejemplo la siguiente consulta exitosa al modulo de `servicios`:
+        ```xml
+        <SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
+          <SOAP-ENV:Body>
+            <getElementsResponse>
+              <return xsi:type="xsd:string">{"folio":"1589","cliente":{"nombre":"Pegasus Control SA de CV","rfc":"PCO960701A49"},"fechaSurtido":"2017-03-23 15:09:02","conductor":{"nombre":"Juan García","tarjeta":"1111222233334444","usuario":"jgarcia","vehiculo":{"noEconomico":"82","placas":"JMM1289","grupo":null,"odometro":"72362"}},"cantidad":"26.32","producto":"Pemex Magna","subtotal":"363.75000,"tasaImpuesto":"16.0000","importeImpuesto":"58.2000","total":"431.6000","codigoEstacion":"ES66665","autorizacion":"180","tipoPago":"2","valeUsado":null}</return>
+            </getElementsResponse>
+          </SOAP-ENV:Body>
+        </SOAP-ENV:Envelope>
+        ```
       consumes:
         - application/xml
       produces:
@@ -114,33 +175,33 @@ paths:
             $ref: '#/definitions/Get'
           x-examples:
             application/json:
-              session: fqs5726ta3tcpda1q8oqm4kh76
+              session: fqs5726ta...8oqm4kh76
               module: servicios
               filters:
-                folio: 6014
+                folio: 1589
                 folioDesde: 
                 fechaInicio: 
                 fechaFin: 
       responses:
         '200':
-          description: " - Consulta exitosa de servicios"
+          description: "Consulta exitosa de servicios"
           schema:
-                $ref: '#/definitions/Servicio'
+            $ref: '#/definitions/Servicio'
         '290':
-          description: " - Consulta exitosa de creditos"
+          description: "Consulta exitosa de creditos"
           schema:
             $ref: '#/definitions/Credito'
-        '400':
-          description: Folio incorrecto
-        '404':
-          description: Servicio no encontrado
+        '500':
+          description: SoapFault
+          schema: 
+            $ref: '#/definitions/SoapFault'
       security:
         - api_key: []
       x-code-samples:
         - lang: JSON (creditos)
           source: |
             {
-              "session": "fqs5726ta3tcpda1q8oqm4kh76",
+              "session": "fqs5726ta...8oqm4kh76",
               "module": "creditos",
               "filters": {
                 "codigoEstacion": "ES12345",
@@ -149,11 +210,10 @@ paths:
             }
         - lang: XML (servicios)
           source: |
-            <?xml version="1.0" encoding="UTF-8"?>
             <SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns1="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
             <SOAP-ENV:Body>
                 <ns1:getElements>
-                    <param0 xsi:type="xsd:string">fqs5726ta3tcpda1q8oqm4kh76</param0>
+                    <param0 xsi:type="xsd:string">fqs5726ta...8oqm4kh76</param0>
                     <param1 xsi:type="xsd:string">servicios</param1>
                     <param2 xsi:type="xsd:string">{"folio":"5472", "folioDesde":"", "fechaInicio":"", "fechaFin":""}</param2>
                 </ns1:getElements>
@@ -161,69 +221,47 @@ paths:
             </SOAP-ENV:Envelope>
         - lang: XML (creditos)
           source: |
-            <?xml version="1.0" encoding="UTF-8"?>
             <SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns1="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
             <SOAP-ENV:Body>
                 <ns1:getElements>
-                    <param0 xsi:type="xsd:string">fqs5726ta3tcpda1q8oqm4kh76</param0>
+                    <param0 xsi:type="xsd:string">fqs5726ta...8oqm4kh76</param0>
                     <param1 xsi:type="xsd:string">creditos</param1>
                     <param2 xsi:type="xsd:string">{"codigoEstacion":"ES12345", "rfcCliente":""}</param2>
                 </ns1:getElements>
             </SOAP-ENV:Body>
             </SOAP-ENV:Envelope>
-  /user/login:
-    get:
+  /logout:
+    post:
       tags:
-        - clientes
-      summary: Logs user into the system
-      description: ''
-      operationId: loginUser
+        - cerrar sesión
+      summary: logout
+      description: Cierra la sesión creada con la llamada login.
+      consumes:
+        - application/xml
       produces:
         - application/xml
-        - application/json
       parameters:
-        - name: username
-          in: query
-          description: The user name for login
-          required: true
-          type: string
-        - name: password
-          in: query
-          description: The password for login in clear text
-          required: true
-          type: string
+        - in: body
+          name: body
+          description: logout(session)
+          schema:
+            $ref: '#/definitions/LogoutSchema'
       responses:
         '200':
-          description: successful operation
+          description: "Consulta exitosa"
           schema:
-            type: string
-          examples:
-            application/json: OK
-          headers:
-            X-Rate-Limit:
-              type: integer
-              format: int32
-              description: calls per hour allowed by the user
-            X-Expires-After:
-              type: string
-              format: date-time
-              description: date in UTC when toekn expires
-        '400':
-          description: Invalid username/password supplied
-  /user/logout:
-    get:
-      tags:
-        - clientes
-      summary: Logs out current logged in user session
-      description: ''
-      operationId: logoutUser
-      produces:
-        - application/xml
-        - application/json
-      parameters: []
-      responses:
-        default:
-          description: successful operation
+            type: "string"
+            example: "OK"
+      x-code-samples:
+        - lang: XML
+          source: |
+            <SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
+              <SOAP-ENV:Body>
+                <logout>
+                  <param0 xsi:type="xsd:string">oga0hmum6sv7ulvc4plkre07l2</param0>
+                </logout>
+              </SOAP-ENV:Body>
+            </SOAP-ENV:Envelope>
 definitions:
   ApiResponse:
     type: object
@@ -443,17 +481,48 @@ definitions:
             description: Código de la estación
     xml:
       name: PagoCredito
+  LoginSchema:
+    type: object
+    required:
+      - user_auth
+      - application
+    properties:
+      user_auth:
+        description: Arreglo de identificación del usuario
+        type: object
+        allOf:
+          - $ref: '#/definitions/User_auth'
+      application:
+        type: string
+        default: iRED
+    xml:
+      name: LoginSchema
+  LogoutSchema:
+    type: object
+    required:
+      - user_auth
+      - application
+    properties:
+      session:
+        description: ID de la sesión
+        type: string
+        example: fqs5726ta...8oqm4kh76 
+    xml:
+      name: LogoutSchema
   User_auth:
     type: object
+    required:
+      - user_name
+      - password
     properties:
       user_name:
         description: Nombre de usuario
         type: string
-        example: rperez
+        example: soporte@ired.mx
       password:
         description: Contraseña cifrada en MD5
-        type: string
-        example: 730b6f15eeb259144b52e56909905e40
+        type: password
+        example: 3015ca4f270b6938b27c95863174a8db
     xml:
       name: User_auth
   Get:
@@ -467,7 +536,7 @@ definitions:
       session:
         description: ID de la sesión
         type: string
-        example: fqs5726ta3tcpda1q8oqm4kh76 
+        example: fqs5726ta...8oqm4kh76 
       module:
         description: Identificador del modulo
         type: string
@@ -476,9 +545,6 @@ definitions:
         type: string
     xml:
       name: Get
-    x-examples:
-      application/json:
-        asdasd: asd
   ServiceFilters:
     type: object
     description: Es requerido enviar mínimo un filtro
@@ -608,3 +674,58 @@ definitions:
       - servicios
       - creditos
       - pagosCreditos
+  LoginResp:
+    type: object
+    properties:
+      id:
+        description: Session ID
+        type: int32
+        example: fqs5726ta...8oqm4kh76
+      module_name:
+        description: Nombre del modulo
+        type: string
+        example: Users
+      name_value_list:
+        description: Folio del servicio
+        type: object
+        properties:
+          user_id:
+            type: string
+            example: 3c0881be-3f38-5482-7205-89e7858ef0da5
+          user_name:
+            type: string
+            example: soporte@ired.mx
+          user_language:
+            type: string
+            example: es_es
+          user_currency_id:
+            type: string
+            example: ""
+          user_currency_name:
+            type: string
+            example: Pesos
+          is_admin:
+            type: boolean
+            example: 0
+          fecha_servidor:
+            type: int32
+            example: 290317164604
+    xml:
+      name: LoginResp
+  SoapFault:
+    type: object
+    properties:
+      faultcode:
+        description: Fault code
+        type: int32
+      faultactor:
+        description: Fault actor
+        type: string
+      faultstring:
+        description: Fault string
+        type: string
+      detail:
+        description: Detail
+        type: string
+    xml:
+      name: SoapFault

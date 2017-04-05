@@ -7,7 +7,6 @@ import { Subject } from 'rxjs/Subject';
 
 import { BaseComponent, SpecManager } from '../base';
 import JsonPointer from '../../utils/JsonPointer';
-import { JsonSchema } from '../JsonSchema/json-schema';
 import { Tabs } from '../../shared/components/index';
 import { AppStateService, ScrollService } from '../../services/index';
 
@@ -15,7 +14,6 @@ import { AppStateService, ScrollService } from '../../services/index';
   selector: 'request-samples',
   templateUrl: './request-samples.html',
   styleUrls: ['./request-samples.css'],
-  entryComponents: [ JsonSchema ],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class RequestSamples extends BaseComponent implements OnInit {
@@ -41,7 +39,6 @@ export class RequestSamples extends BaseComponent implements OnInit {
   }
 
   changeLangNotify(lang) {
-    console.log(this.JsonSchema);
     let relativeScrollPos = this.scrollService.relativeScrollPos(this.el.nativeElement);
     this.selectedLang.next(lang);
     // do scroll in the end of VM turn to have it seamless
